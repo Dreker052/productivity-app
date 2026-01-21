@@ -91,6 +91,10 @@ func (s *telegramService) Start(ctx context.Context) error {
 	return nil
 }
 
+func (s *telegramService) Stop() {
+	s.bot.StopReceivingUpdates()
+}
+
 // Привязка аккаунта
 func (s *telegramService) handleLinking(chatID int64, username string, token string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

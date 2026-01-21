@@ -43,4 +43,5 @@ type TelegramService interface {
 	Start(ctx context.Context) error
 	GenerateLink(userID string) (string, error)
 	SendDailyPlan(userID string, planText string) error
+	Stop()
 }

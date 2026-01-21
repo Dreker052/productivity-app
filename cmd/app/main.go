@@ -2,8 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/Dreker052/productivity-app.git/internal/config"
 	"github.com/Dreker052/productivity-app.git/internal/database"
@@ -41,7 +46,6 @@ func main() {
 	logger.Info("Starting app")
 
 	db := database.InitDB(cfg, logger)
-	defer db.Close()
 
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -108,9 +112,45 @@ func main() {
 		protected.POST("/share/telegram", telegramHand.ShareDailyTasksToTelegram)
 	}
 
-	if err = r.Run("0.0.0.0:" + cfg.ServerPort); err != nil {
-		logger.Error("Server failed to start", slog.String("error", err.Error()))
-		os.Exit(1)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	srv := &http.Server{
+		Addr:    ":" + cfg.ServerPort,
+		Handler: r,
 	}
+
+	go func() {
+		if err := telegramServ.Start(ctx); err != nil {
+			logger.Error("Telegram bot error", slog.String("error", err.Error()))
+		}
+	}()
+
+	go func() {
+		logger.Info("Server listening", slog.String("port", cfg.ServerPort))
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("Server failed to start", slog.String("error", err.Error()))
+			os.Exit(1)
+		}
+	}()
+
+	<-ctx.Done()
+
+	logger.Info("Shutting down server...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		logger.Error("Server forced to shutdown", slog.String("error", err.Error()))
+	}
+
+	logger.Info("Stopping telegram bot...")
+	telegramServ.Stop()
+
+	logger.Info("Closing database connection...")
+	db.Close()
+
+	logger.Info("Server exited properly")
 
 }
