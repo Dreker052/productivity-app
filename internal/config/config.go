@@ -20,6 +20,8 @@ type Config struct {
 	Env string
 
 	JWTSecret string
+
+	TelegramBotToken string
 }
 
 func LoadConfig() (*Config, error) {
@@ -42,6 +44,8 @@ func LoadConfig() (*Config, error) {
 		Env: os.Getenv("ENV"),
 
 		JWTSecret: os.Getenv("JWT_SECRET"),
+
+		TelegramBotToken: os.Getenv("TELEGRAM_BOT_TOKEN"),
 	}
 
 	return cfg, nil

@@ -30,3 +30,10 @@ type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
 	GetUserByID(ctx context.Context, id string) (*models.User, error)
 }
+
+type TelegramRepository interface {
+	SaveLinkToken(ctx context.Context, token string, userID string, ttl time.Duration) error
+	GetUserIDByToken(ctx context.Context, token string) (string, error)
+	SaveIntegration(ctx context.Context, userID string, chatID int64, username string) error
+	GetChatID(ctx context.Context, userID string) (int64, error)
+}
