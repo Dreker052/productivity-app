@@ -68,11 +68,6 @@ func main() {
 		logger.Error("Failed to initialize Telegram service", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
-	go func() {
-		if err := telegramServ.Start(context.Background()); err != nil {
-			logger.Error("Telegram bot stopped", slog.String("error", err.Error()))
-		}
-	}()
 
 	dailyTaskHand := dailyTaskHandler.NewDailyTaskHandler(dailyTaskServ, logger)
 	diaryEntryHand := diaryEntryHandler.NewDiaryEntryHandler(diaryEntryServ, logger)
