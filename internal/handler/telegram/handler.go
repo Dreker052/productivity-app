@@ -92,13 +92,11 @@ func (h *telegramHandler) ShareDailyTasksToTelegram(c *gin.Context) {
 		safeTitle := htmlEscape(t.Title)
 
 		if t.IsCompleted {
-			sb.WriteString(fmt.Sprintf("✅ <s>%s</s>\n", safeTitle))
+			sb.WriteString(fmt.Sprintf("<s>%s</s>\n", safeTitle))
 		} else {
-			sb.WriteString(fmt.Sprintf("⭕️ %s\n", safeTitle))
+			sb.WriteString(fmt.Sprintf("%s\n", safeTitle))
 		}
 	}
-
-	sb.WriteString("\n🚀 <i>Отправлено через ProductivityApp</i>")
 
 	err = h.telegramService.SendDailyPlan(userID, sb.String())
 	if err != nil {
