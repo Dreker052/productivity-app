@@ -48,7 +48,7 @@ func (s *telegramService) GenerateLink(userID string) (string, error) {
 		return "", err
 	}
 
-	// Формат: https://t.me/YourBotName?start=TOKEN
+	// Формат: https://t.me/BotName?start=TOKEN
 	return fmt.Sprintf("https://t.me/%s?start=%s", s.bot.Self.UserName, token), nil
 }
 
