@@ -100,7 +100,7 @@ func (h *yearlyGoalHandler) UpdateProgress(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info("Updating progress", slog.String("userID", userID), slog.String("goalID", goalID), slog.Int("currentStep", input.CurrentStep))
+	h.logger.Debug("Updating progress", slog.String("userID", userID), slog.String("goalID", goalID), slog.Int("currentStep", input.CurrentStep))
 
 	if err := h.yearlyGoalService.UpdateProgress(c.Request.Context(), userID, goalID, input.CurrentStep); err != nil {
 		h.logger.Error("Failed to update progress", slog.String("error", err.Error()))

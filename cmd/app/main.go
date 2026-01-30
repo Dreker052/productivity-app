@@ -76,8 +76,6 @@ func main() {
 	yearlyGoalHand := yearlyGoalHandler.NewYearlyGoalHandler(yearlyGoalServ, logger)
 	telegramHand := telegramHandler.NewTelegramHandler(telegramServ, dailyTaskServ, logger)
 
-	_ = userHand
-
 	api := r.Group("/api")
 	{
 		authGroup := api.Group("/auth")
@@ -105,6 +103,11 @@ func main() {
 
 		protected.GET("/telegram/link", telegramHand.GetTelegramLink)
 		protected.POST("/share/telegram", telegramHand.ShareDailyTasksToTelegram)
+
+		protected.GET("user/me", userHand.GetUserData)
+		protected.PATCH("user/change-name", userHand.ChangeName)
+		protected.PATCH("user/change-email", userHand.ChangeEmail)
+		protected.PUT("user/change-password", userHand.ChangePassword)
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

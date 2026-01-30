@@ -29,6 +29,9 @@ type UserRepository interface {
 	Create(ctx context.Context, user *models.User) error
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
 	GetUserByID(ctx context.Context, id string) (*models.User, error)
+	ChangeName(ctx context.Context, userID string, newName string) error
+	ChangeEmail(ctx context.Context, userID, email string) error
+	ChangePassword(ctx context.Context, userID, newHash string) error
 }
 
 type TelegramRepository interface {

@@ -83,3 +83,66 @@ func (r *userRepository) GetUserByID(ctx context.Context, id string) (*models.Us
 	}
 	return &user, nil
 }
+
+func (r *userRepository) ChangeName(ctx context.Context, userID, newName string) error {
+	sql, args, err := r.sb.Update("users").
+		Set("name", newName).
+		Where(sq.Eq{"id": userID}).
+		ToSql()
+	if err != nil {
+		r.logger.Error("[UserRepo ChangeName] failed to create update name query", slog.String("error", err.Error()))
+		return err
+	}
+
+	_, err = r.db.Exec(ctx, sql, args...)
+	if err != nil {
+		r.logger.Error("[UserRepo ChangeName] failed to update name", slog.String("error", err.Error()))
+		return err
+	}
+
+	r.logger.Info("[UserRepo ChangeName] name successfully updated", slog.String("userID", userID))
+
+	return nil
+}
+
+func (r *userRepository) ChangeEmail(ctx context.Context, userID, newEmail string) error {
+	sql, args, err := r.sb.Update("users").
+		Set("email", newEmail).
+		Where(sq.Eq{"id": userID}).
+		ToSql()
+	if err != nil {
+		r.logger.Error("[UserRepo ChangeName] failed to create change email query", slog.String("error", err.Error()))
+		return err
+	}
+
+	_, err = r.db.Exec(ctx, sql, args...)
+	if err != nil {
+		r.logger.Error("[UserRepo ChangeName] failed to change email", slog.String("error", err.Error()))
+		return err
+	}
+
+	r.logger.Info("[UserRepo ChangeName] email successfully changed", slog.String("userID", userID))
+
+	return nil
+}
+
+func (r *userRepository) ChangePassword(ctx context.Context, userID, newHash string) error {
+	sql, args, err := r.sb.Update("users").
+		Set("password", newHash).
+		Where(sq.Eq{"id": userID}).
+		ToSql()
+	if err != nil {
+		r.logger.Error("[UserRepo ChangePassword] failed to create change password query", slog.String("error", err.Error()))
+		return err
+	}
+
+	_, err = r.db.Exec(ctx, sql, args...)
+	if err != nil {
+		r.logger.Error("[UserRepo ChangePassword] failed to change password", slog.String("error", err.Error()))
+		return err
+	}
+
+	r.logger.Info("[UserRepo ChangePassword] password successfully changed", slog.String("userID", userID))
+
+	return nil
+}

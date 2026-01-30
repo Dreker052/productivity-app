@@ -31,6 +31,10 @@ type YearlyGoalService interface {
 type UserService interface {
 	Create(ctx context.Context, user *models.User) error
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
+	GetByID(ctx context.Context, id string) (*models.User, error)
+	ChangeName(ctx context.Context, userID, name string) error
+	ChangeEmail(ctx context.Context, userID, email string) error
+	ChangePassword(ctx context.Context, userID, oldPassword, newPassword string) error
 }
 
 type AuthService interface {
