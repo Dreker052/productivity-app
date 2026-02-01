@@ -2,14 +2,18 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/Dreker052/productivity-app.git/internal/models"
 	"github.com/Dreker052/productivity-app.git/internal/repository"
 	"github.com/Dreker052/productivity-app.git/internal/utils"
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 )
 
 var (
@@ -17,38 +21,51 @@ var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrUserNotFound       = errors.New("user not found")
 	ErrInvalidOrExpired   = errors.New("invalid or expired refresh token")
+	ErrUserNotVerified    = errors.New("user is not verified")
 )
 
 type authService struct {
-	jwtSecret string
-	userRepo  repository.UserRepository
-	logger    *slog.Logger
+	jwtSecret   string
+	userRepo    repository.UserRepository
+	queueClient *asynq.Client
+	logger      *slog.Logger
+	serverAddr  string
 }
 
-func NewAuthService(userRepo repository.UserRepository, logger *slog.Logger, jwtSecret string) *authService {
+func NewAuthService(userRepo repository.UserRepository, logger *slog.Logger, jwtSecret, serverAddr string, queueClient *asynq.Client) *authService {
 	return &authService{
-		userRepo:  userRepo,
-		logger:    logger,
-		jwtSecret: jwtSecret,
+		userRepo:    userRepo,
+		logger:      logger,
+		queueClient: queueClient,
+		jwtSecret:   jwtSecret,
+		serverAddr:  serverAddr,
 	}
 }
 
-func (s *authService) Register(ctx context.Context, user *models.User) (string, string, error) {
+type EmailPayload struct {
+	ToEmail string `json:"to_email"`
+	Subject string `json:"subject"`
+	Body    string `json:"body"`
+}
+
+const TypeEmailDelivery = "email:delivery"
+
+func (s *authService) Register(ctx context.Context, user *models.User) error {
 
 	existingUser, err := s.userRepo.GetByEmail(ctx, user.Email)
 	if err != nil {
 		s.logger.Error("[AuthService Register] failed to check existing user", slog.String("error", err.Error()))
-		return "", "", err
+		return err
 	}
 	if existingUser != nil {
 		s.logger.Warn("[AuthService Register] user already exists", slog.String("email", user.Email))
-		return "", "", ErrUserExists
+		return ErrUserExists
 	}
 
 	hashedPass, err := utils.HashPassword(user.Password)
 	if err != nil {
 		s.logger.Error("[AuthService Register] failed to hash password", slog.String("error", err.Error()))
-		return "", "", err
+		return err
 	}
 
 	user.ID = strings.ToUpper(uuid.New().String())
@@ -56,10 +73,49 @@ func (s *authService) Register(ctx context.Context, user *models.User) (string, 
 
 	if err := s.userRepo.Create(ctx, user); err != nil {
 		s.logger.Error("[AuthService Register] failed to create user", slog.String("error", err.Error()))
-		return "", "", err
+		return err
 	}
 
-	return utils.GenerateTokens(user.ID, s.jwtSecret)
+	verificationToken := uuid.New().String()
+
+	err = s.userRepo.SaveVerificationToken(ctx, verificationToken, user.ID, 1*time.Hour)
+	if err != nil {
+		s.logger.Error("[AuthService Register] failed to save verification token", slog.String("error", err.Error()))
+		return err
+	}
+
+	link := fmt.Sprintf("http://%s/api/auth/verify-email?token=%s", s.serverAddr, verificationToken)
+
+	body := fmt.Sprintf(`
+		<h2>Добро пожаловать в Productivity App, %s!</h2>
+		<p>Пожалуйста, подтвердите вашу почту, нажав на ссылку ниже:</p>
+		<p><a href="%s">Подтвердить регистрацию</a></p>
+		<br>
+		<small>Если вы не регистрировались, просто проигнорируйте это письмо.</small>
+	`, user.Name, link)
+
+	payload := EmailPayload{
+		ToEmail: user.Email,
+		Subject: "Подтверждение почты",
+		Body:    body,
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		s.logger.Error("[AuthService Register] failed to marshal email payload", slog.String("error", err.Error()))
+		return nil
+	}
+
+	task := asynq.NewTask(TypeEmailDelivery, payloadBytes)
+
+	info, err := s.queueClient.Enqueue(task, asynq.Queue("emails"))
+	if err != nil {
+		s.logger.Error("[AuthService Register] failed to enqueue email task", slog.String("error", err.Error()))
+	} else {
+		s.logger.Info("[AuthService Register] Enqueued verification email", slog.String("task_id", info.ID), slog.String("email", user.Email))
+	}
+
+	return nil
 }
 
 func (s *authService) Login(ctx context.Context, email, password string) (string, string, error) {
@@ -80,6 +136,10 @@ func (s *authService) Login(ctx context.Context, email, password string) (string
 		return "", "", ErrInvalidCredentials
 	}
 
+	if !user.IsVerified {
+		return "", "", ErrUserNotVerified
+	}
+
 	return utils.GenerateTokens(user.ID, s.jwtSecret)
 }
 
@@ -96,4 +156,8 @@ func (s *authService) RefreshTokens(ctx context.Context, refreshToken string) (s
 	}
 
 	return utils.GenerateTokens(userID, s.jwtSecret)
+}
+
+func (s *authService) VerifyEmail(ctx context.Context, token string) error {
+	return s.userRepo.VerifyEmail(ctx, token)
 }

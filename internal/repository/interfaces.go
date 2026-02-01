@@ -32,6 +32,8 @@ type UserRepository interface {
 	ChangeName(ctx context.Context, userID string, newName string) error
 	ChangeEmail(ctx context.Context, userID, email string) error
 	ChangePassword(ctx context.Context, userID, newHash string) error
+	SaveVerificationToken(ctx context.Context, token, userID string, ttl time.Duration) error
+	VerifyEmail(ctx context.Context, verificationToken string) error
 }
 
 type TelegramRepository interface {

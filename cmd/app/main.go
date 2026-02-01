@@ -32,6 +32,7 @@ import (
 	userService "github.com/Dreker052/productivity-app.git/internal/service/user"
 	yearlyGoalService "github.com/Dreker052/productivity-app.git/internal/service/yearlyGoal"
 	"github.com/gin-gonic/gin"
+	"github.com/hibiken/asynq"
 )
 
 func main() {
@@ -47,6 +48,12 @@ func main() {
 
 	db := database.InitDB(cfg, logger)
 
+	redisOpt := asynq.RedisClientOpt{
+		Addr: cfg.RedisAddr,
+	}
+
+	queueClient := asynq.NewClient(redisOpt)
+
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestLogger(logger))
@@ -59,7 +66,7 @@ func main() {
 
 	dailyTaskServ := dailyTaskService.NewDailyTaskService(dailyTaskRepo, logger)
 	diaryEntryServ := diaryEntryService.NewDiaryEntryService(diaryEntryRepo, logger)
-	authServ := authService.NewAuthService(userRepo, logger, cfg.JWTSecret)
+	authServ := authService.NewAuthService(userRepo, logger, cfg.JWTSecret, cfg.ServerAddr, queueClient)
 	userServ := userService.NewUserService(userRepo, logger)
 	yearlyGoalServ := yearlyGoalService.NewYearlyGoalService(yearlyGoalRepo, logger)
 
@@ -83,6 +90,7 @@ func main() {
 			authGroup.POST("/register", authHand.Register)
 			authGroup.POST("/login", authHand.Login)
 			authGroup.POST("/refresh", authHand.RefreshTokens)
+			authGroup.GET("/verify-email", authHand.VerifyEmail)
 		}
 	}
 
@@ -114,7 +122,7 @@ func main() {
 	defer stop()
 
 	srv := &http.Server{
-		Addr:    ":" + cfg.ServerPort,
+		Addr:    cfg.ServerAddr,
 		Handler: r,
 	}
 
@@ -125,7 +133,7 @@ func main() {
 	}()
 
 	go func() {
-		logger.Info("Server listening", slog.String("port", cfg.ServerPort))
+		logger.Info("Server listening", slog.String("addr", cfg.ServerAddr))
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Error("Server failed to start", slog.String("error", err.Error()))
 			os.Exit(1)
@@ -148,6 +156,7 @@ func main() {
 
 	logger.Info("Closing database connection...")
 	db.Close()
+	queueClient.Close()
 
 	logger.Info("Server exited properly")
 

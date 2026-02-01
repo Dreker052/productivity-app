@@ -39,8 +39,9 @@ type UserService interface {
 
 type AuthService interface {
 	Login(ctx context.Context, email, password string) (string, string, error)
-	Register(ctx context.Context, user *models.User) (string, string, error)
+	Register(ctx context.Context, user *models.User) error
 	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
+	VerifyEmail(ctx context.Context, verificationToken string) error
 }
 
 type TelegramService interface {

@@ -15,13 +15,17 @@ type Config struct {
 	DBName     string
 	DBSSLMode  string
 
-	ServerPort string
+	ServerAddr string
 
 	Env string
 
 	JWTSecret string
 
 	TelegramBotToken string
+
+	RedisAddr string
+
+	EmailDeliveryServiceUrl string
 }
 
 func LoadConfig() (*Config, error) {
@@ -39,13 +43,17 @@ func LoadConfig() (*Config, error) {
 		DBName:     os.Getenv("DB_NAME"),
 		DBSSLMode:  os.Getenv("DB_SSLMODE"),
 
-		ServerPort: os.Getenv("SERVER_PORT"),
+		ServerAddr: os.Getenv("SERVER_ADDR"),
 
 		Env: os.Getenv("ENV"),
 
 		JWTSecret: os.Getenv("JWT_SECRET"),
 
 		TelegramBotToken: os.Getenv("TELEGRAM_BOT_TOKEN"),
+
+		RedisAddr: os.Getenv("REDIS_ADDR"),
+
+		EmailDeliveryServiceUrl: os.Getenv("EMAIL_DELIVERY_SERVICE_URL"),
 	}
 
 	return cfg, nil

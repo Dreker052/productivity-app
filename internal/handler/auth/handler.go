@@ -61,8 +61,7 @@ func (h *authHandler) Register(c *gin.Context) {
 		Password: input.Password,
 	}
 
-	accessToken, refreshToken, err := h.AuthService.Register(ctx, user)
-	if err != nil {
+	if err := h.AuthService.Register(ctx, user); err != nil {
 		if errors.Is(err, service.ErrUserAlreadyExists) {
 			c.JSON(409, gin.H{"error": "User already exists"})
 			return
@@ -74,9 +73,8 @@ func (h *authHandler) Register(c *gin.Context) {
 
 	h.logger.Info("user registered successfully", slog.String("email", input.Email))
 
-	c.JSON(200, AuthResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Registration successful. Please check your email to verify account.",
 	})
 }
 
@@ -138,4 +136,35 @@ func (h *authHandler) RefreshTokens(c *gin.Context) {
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	})
+}
+
+// GET api/auth/verify-email?token=...
+func (h *authHandler) VerifyEmail(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		h.logger.Error("[AuthHandler VerifyEmail] Missing verification token")
+		c.Data(400, "text/html; charset=utf-8", []byte("<h1>Ошибка: Код не найден</h1>"))
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	if err := h.AuthService.VerifyEmail(ctx, token); err != nil {
+		h.logger.Error("[AuthHandler VerifyEmail] Failed to verify email", slog.String("error", err.Error()))
+		c.Data(400, "text/html; charset=utf-8", []byte(`
+			<div style="text-align: center; margin-top: 50px; font-family: sans-serif;">
+				<h1 style="color: red;">Ошибка подтверждения</h1>
+				<p>Ссылка недействительна или срок её действия истек.</p>
+			</div>
+		`))
+		return
+	}
+
+	c.Data(200, "text/html; charset=utf-8", []byte(`
+		<div style="text-align: center; margin-top: 50px; font-family: sans-serif;">
+			<h1 style="color: green;">Email успешно подтвержден! ✅</h1>
+			<p>Теперь вы можете вернуться в приложение Productivity App и войти в свой аккаунт.</p>
+		</div>
+	`))
 }
