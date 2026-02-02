@@ -6,7 +6,7 @@
 ### Основные экраны:
 
 <p align="center">
-  <img src="assets/daily_tasks.png" width="250" />
+  <img src="assets/daily_tasks_view.png" width="250" />
   <img src="assets/diary_view.png" width="250" /> 
   <img src="assets/yearly_goals_view.png" width="250" />
   <img src="assets/profile_view.png" width="250" />
@@ -25,7 +25,7 @@
 ### Интеграция с telegram:
 
 <p align="center">
-  <img src="assets/daily_tasks.png" width="250" />
+  <img src="assets/daily_tasks_view.png" width="250" />
   <img src="assets/tg1.png" width="250" />
   <img src="assets/tg2.png" width="250" /> 
 </p>
