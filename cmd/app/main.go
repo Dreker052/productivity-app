@@ -33,6 +33,7 @@ import (
 	yearlyGoalService "github.com/Dreker052/productivity-app.git/internal/service/yearlyGoal"
 	"github.com/gin-gonic/gin"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -57,6 +58,7 @@ func main() {
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestLogger(logger))
+	r.Use(middleware.PrometheusMiddleware())
 
 	dailyTaskRepo := dailyTaskRepository.NewDailyTaskRepository(db, logger)
 	diaryEntryRepo := diaryEntryRepository.NewDiaryEntryRepository(db, logger)
@@ -82,6 +84,8 @@ func main() {
 	userHand := userHandler.NewUserHandler(userServ, logger)
 	yearlyGoalHand := yearlyGoalHandler.NewYearlyGoalHandler(yearlyGoalServ, logger)
 	telegramHand := telegramHandler.NewTelegramHandler(telegramServ, dailyTaskServ, logger)
+
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	api := r.Group("/api")
 	{
