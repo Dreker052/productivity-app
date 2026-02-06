@@ -60,6 +60,7 @@
 *   **Migrations:** Goose.
 *   **Auth:** JWT (Access/Refresh rotation), Bcrypt.
 *   **Concurrency:** Graceful Shutdown, Goroutines для бота.
+*   **Observability:** Prometheus + Grafana (реализован RED метод).
 *   **Infrastructure:** Docker, Docker Compose.
 
 ---
@@ -70,6 +71,7 @@
 1.  **Main API (Monolith):** Обрабатывает HTTP-запросы от мобильного приложения, управляет данными и бизнес-логикой.
 2.  **Email Worker (Microservice):** Отдельный сервис, который занимается исключительно отправкой писем.
 3.  **Telegram Service:** Интегрированный в основное приложение модуль, работающий через Long Polling.
+4.  **Monitoring Stack:** Prometheus собирает метрики, Grafana визуализирует состояние системы на основе метрик.
 
 ### 📨 Асинхронная обработка
 Для отправки писем (например, при подтверждении регистрации) используется паттерн **Producer-Consumer**:
@@ -85,6 +87,19 @@
 *   `YearlyGoals` / `GoalGroups` — Иерархические цели.
 *   `TelegramIntegrations` — Связь аккаунта приложения с Telegram ID.
 
+## 📊 Мониторинг cистемы
+
+Для контроля состояния системы внедрен полный цикл мониторинга на базе **Prometheus** и **Grafana**.
+
+<p align="center">
+  <img src="assets/grafana_dashboard.png" width="100%" />
+</p>
+
+Реализован сбор метрик по методике **RED** (RPS, Errors, Duration):
+*   **RPS (Requests Per Second):** Нагрузка на API в реальном времени.
+*   **Duration:** Время ответа сервера (Гистограммы).
+*   **Error Rate:** Отслеживание 4xx и 5xx ошибок.
+
 ### Схема взаимодействия
 
 ```mermaid
@@ -94,6 +109,7 @@ graph TD
     classDef secondary fill:#1e1e1e,stroke:#00b8ff,stroke-width:2px,color:#fff;
     classDef storage fill:#1e1e1e,stroke:#ff0055,stroke-width:2px,color:#fff;
     classDef ext fill:#1e1e1e,stroke:#aaaaaa,stroke-width:1px,color:#ccc,stroke-dasharray: 5 5;
+    classDef monitor fill:#1e1e1e,stroke:#ffa500,stroke-width:2px,color:#fff;
 
     %% Nodes
     iOS([📱 iOS Client]):::main
@@ -105,12 +121,17 @@ graph TD
         Redis[(Redis Queue)]:::storage
     end
     
+    subgraph Observability["📊 Monitoring"]
+        Prometheus[(🔥 Prometheus)]:::monitor
+        Grafana(📈 Grafana):::monitor
+    end
+    
     Telegram[Telegram API]:::ext
     Gmail[SMTP Server]:::ext
 
     %% Edges
     iOS ==>|REST| API
-    iOS -.->|Integraion| Telegram
+    iOS -.->|Deep Link| Telegram
     
     API <==>|Updates| Telegram
     API -->|Persist| Postgres
@@ -118,4 +139,7 @@ graph TD
     
     Redis -->|Consume| Worker
     Worker -->|Send| Gmail
+    
+    Prometheus -->|Scrape /metrics| API
+    Grafana -->|Query| Prometheus
 ```
