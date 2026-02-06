@@ -93,3 +93,65 @@ func (h *dailyTaskHandler) ToggleTask(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"status": "updated"})
 }
+
+// DELETE /api/tasks/:id
+func (h *dailyTaskHandler) Delete(c *gin.Context) {
+	userID := c.MustGet("userID").(string)
+	taskID := c.Param("id")
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	err := h.taskService.Delete(ctx, userID, taskID)
+	if err != nil {
+		if err.Error() == "task not found" {
+			h.logger.Warn("[DailyTaskHandler Delete] Task not found", slog.String("taskID", taskID), slog.String("userID", userID))
+			c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
+			return
+		}
+		h.logger.Error("[DailyTaskHandler Delete] failed to delete daily task")
+		c.JSON(500, gin.H{"error": "Failed to delete daily task"})
+		return
+	}
+
+	h.logger.Info("[DailyTaskHandler Update] Daily task successfully deleted", slog.String("taskID", taskID))
+
+	c.JSON(200, gin.H{"status": "daily task successfully deleted"})
+}
+
+type UpdateInput struct {
+	NewTitle string `json:"newTitle" binding:"required"`
+}
+
+// PATCH /api/tasks/:id
+func (h *dailyTaskHandler) Update(c *gin.Context) {
+	userID := c.MustGet("userID").(string)
+	taskID := c.Param("id")
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	var input UpdateInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		h.logger.Warn("[DailyTaskHandler Update] failed to bind JSON", slog.String("error", err.Error()))
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.taskService.Update(ctx, userID, taskID, input.NewTitle); err != nil {
+		if err.Error() == "task not found" {
+			h.logger.Warn("[DailyTaskHandler Update] Task not found", slog.String("taskID", taskID), slog.String("userID", userID))
+			c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
+			return
+		}
+		h.logger.Error("[DailyTaskHandler Update] failed to update daily task", slog.String("error", err.Error()))
+		c.JSON(500, "Failed to update daily task")
+		return
+	}
+
+	h.logger.Info("[DailyTaskHandler Update] Daily task successfully updated", slog.String("taskID", taskID))
+
+	c.JSON(200, gin.H{"status": "Daily task successfully updated"})
+
+}

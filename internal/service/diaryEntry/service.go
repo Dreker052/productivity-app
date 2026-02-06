@@ -22,7 +22,6 @@ func NewDiaryEntryService(diaryEntryRepo repository.DiaryEntryRepository, logger
 }
 
 func (s *diaryEntryService) Save(ctx context.Context, entry *models.DiaryEntry) error {
-
 	return s.diaryEntryRepo.Save(ctx, entry)
 }
 

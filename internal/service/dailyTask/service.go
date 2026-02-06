@@ -10,25 +10,33 @@ import (
 )
 
 type dailyTaskService struct {
-	repo   repository.DailyTaskRepository
-	logger *slog.Logger
+	dailyTaskRepo repository.DailyTaskRepository
+	logger        *slog.Logger
 }
 
-func NewDailyTaskService(repo repository.DailyTaskRepository, logger *slog.Logger) *dailyTaskService {
+func NewDailyTaskService(dailyTaskRepo repository.DailyTaskRepository, logger *slog.Logger) *dailyTaskService {
 	return &dailyTaskService{
-		repo:   repo,
-		logger: logger,
+		dailyTaskRepo: dailyTaskRepo,
+		logger:        logger,
 	}
 }
 
 func (s *dailyTaskService) Create(ctx context.Context, task *models.DailyTask) error {
-	return s.repo.Create(ctx, task)
+	return s.dailyTaskRepo.Create(ctx, task)
 }
 
 func (s *dailyTaskService) GetByDate(ctx context.Context, userID string, date time.Time) ([]*models.DailyTask, error) {
-	return s.repo.GetByDate(ctx, userID, date)
+	return s.dailyTaskRepo.GetByDate(ctx, userID, date)
 }
 
 func (s *dailyTaskService) ToggleStatus(ctx context.Context, userID string, taskID string) error {
-	return s.repo.ToggleStatus(ctx, userID, taskID)
+	return s.dailyTaskRepo.ToggleStatus(ctx, userID, taskID)
+}
+
+func (s *dailyTaskService) Delete(ctx context.Context, userID string, taskID string) error {
+	return s.dailyTaskRepo.Delete(ctx, userID, taskID)
+}
+
+func (s *dailyTaskService) Update(ctx context.Context, userID, taskID, newTitle string) error {
+	return s.dailyTaskRepo.Update(ctx, userID, taskID, newTitle)
 }

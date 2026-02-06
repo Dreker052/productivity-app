@@ -104,6 +104,8 @@ func main() {
 		protected.POST("/tasks", dailyTaskHand.Create)
 		protected.GET("/tasks", dailyTaskHand.GetTasks)
 		protected.PATCH("/tasks/:id/toggle", dailyTaskHand.ToggleTask)
+		protected.DELETE("/tasks/:id", dailyTaskHand.Delete)
+		protected.PATCH("tasks/:id", dailyTaskHand.Update)
 
 		protected.POST("/diary", diaryEntryHand.Save)
 		protected.GET("/diary", diaryEntryHand.GetByDate)

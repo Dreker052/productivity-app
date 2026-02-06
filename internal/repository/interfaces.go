@@ -11,6 +11,8 @@ type DailyTaskRepository interface {
 	Create(ctx context.Context, task *models.DailyTask) error
 	GetByDate(ctx context.Context, userId string, date time.Time) ([]*models.DailyTask, error)
 	ToggleStatus(ctx context.Context, userId string, taskId string) error
+	Update(ctx context.Context, userID, taskID, newTitle string) error
+	Delete(ctx context.Context, userID, taskID string) error
 }
 
 type DiaryEntryRepository interface {

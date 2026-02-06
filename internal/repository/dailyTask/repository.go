@@ -2,6 +2,7 @@ package dailytask
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -10,6 +11,10 @@ import (
 	"github.com/Masterminds/squirrel"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+var (
+	ErrTaskNotFound = errors.New("task not found")
 )
 
 type dailyTaskRepository struct {
@@ -105,6 +110,51 @@ func (r *dailyTaskRepository) ToggleStatus(ctx context.Context, userID string, t
 
 	if res.RowsAffected() == 0 {
 		return fmt.Errorf("task not found or access denied")
+	}
+
+	return nil
+}
+
+func (r *dailyTaskRepository) Delete(ctx context.Context, userID string, taskID string) error {
+	sql, args, err := r.sb.Delete("daily_tasks").
+		Where(sq.Eq{"user_id": userID, "id": taskID}).
+		ToSql()
+	if err != nil {
+		r.logger.Error("[DailyTaskRepo Delete] failed to create delete query", slog.String("error", err.Error()))
+		return err
+	}
+
+	res, err := r.db.Exec(ctx, sql, args...)
+	if err != nil {
+		r.logger.Error("[DailyTaskRepo Delete] failed to delete daily task", slog.String("error", err.Error()))
+		return err
+	}
+
+	if res.RowsAffected() == 0 {
+		return ErrTaskNotFound
+	}
+
+	return nil
+}
+
+func (r *dailyTaskRepository) Update(ctx context.Context, userID, taskID, newTitle string) error {
+	sql, args, err := r.sb.Update("daily_tasks").
+		Set("title", newTitle).
+		Where(sq.Eq{"user_id": userID, "id": taskID}).
+		ToSql()
+	if err != nil {
+		r.logger.Error("[DailyTaskRepo Delete] failed to create update query", slog.String("error", err.Error()))
+		return err
+	}
+
+	res, err := r.db.Exec(ctx, sql, args...)
+	if err != nil {
+		r.logger.Error("[DailyTaskRepo Delete] failed to update daily task", slog.String("error", err.Error()))
+		return err
+	}
+
+	if res.RowsAffected() == 0 {
+		return ErrTaskNotFound
 	}
 
 	return nil
