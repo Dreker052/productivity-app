@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/Dreker052/productivity-app.git/internal/config"
+	"github.com/Dreker052/productivity-app/internal/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

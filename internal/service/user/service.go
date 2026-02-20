@@ -5,9 +5,9 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/Dreker052/productivity-app.git/internal/models"
-	"github.com/Dreker052/productivity-app.git/internal/repository"
-	"github.com/Dreker052/productivity-app.git/internal/utils"
+	"github.com/Dreker052/productivity-app/internal/models"
+	"github.com/Dreker052/productivity-app/internal/repository"
+	"github.com/Dreker052/productivity-app/internal/utils"
 )
 
 type userService struct {

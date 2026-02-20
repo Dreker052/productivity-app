@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/Dreker052/productivity-app.git/internal/models"
+	"github.com/Dreker052/productivity-app/internal/models"
 )
 
 var ErrUserAlreadyExists = errors.New("user already exists")

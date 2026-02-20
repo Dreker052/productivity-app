@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/Dreker052/productivity-app.git/internal/service"
+	"github.com/Dreker052/productivity-app/internal/service"
 	"github.com/gin-gonic/gin"
 )
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Dreker052/productivity-app.git/internal/config"
+	"github.com/Dreker052/productivity-app/internal/config"
 	"github.com/lmittmann/tint"
 )
 

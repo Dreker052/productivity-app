@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Dreker052/productivity-app.git/internal/models"
-	"github.com/Dreker052/productivity-app.git/internal/repository"
-	"github.com/Dreker052/productivity-app.git/internal/utils"
+	"github.com/Dreker052/productivity-app/internal/models"
+	"github.com/Dreker052/productivity-app/internal/repository"
+	"github.com/Dreker052/productivity-app/internal/utils"
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 )

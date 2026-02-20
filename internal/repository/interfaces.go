@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Dreker052/productivity-app.git/internal/models"
+	"github.com/Dreker052/productivity-app/internal/models"
 )
 
 type DailyTaskRepository interface {

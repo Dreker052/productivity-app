@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Dreker052/productivity-app.git/internal/repository"
+	"github.com/Dreker052/productivity-app/internal/repository"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/google/uuid"
 )

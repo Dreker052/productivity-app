@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/Dreker052/productivity-app.git/internal/models"
-	"github.com/Dreker052/productivity-app.git/internal/repository"
+	"github.com/Dreker052/productivity-app/internal/models"
+	"github.com/Dreker052/productivity-app/internal/repository"
 )
 
 type diaryEntryService struct {
