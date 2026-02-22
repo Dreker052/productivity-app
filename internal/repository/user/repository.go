@@ -176,7 +176,11 @@ func (r *userRepository) VerifyEmail(ctx context.Context, verificationToken stri
 		return err
 	}
 
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
+			r.logger.Error("[UserRepo VerifyEmail] failed to rollback transaction", slog.String("error", err.Error()))
+		}
+	}()
 
 	tokenSql, tokenArgs, err := r.sb.Select("user_id").
 		From("verification_tokens").

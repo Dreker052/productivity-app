@@ -103,7 +103,9 @@ func (s *telegramService) handleLinking(chatID int64, username string, token str
 	userID, err := s.telegramRepo.GetUserIDByToken(ctx, token)
 	if err != nil {
 		msg := tgbotapi.NewMessage(chatID, "Ошибка или срок действия ссылки истек.")
-		s.bot.Send(msg)
+		if _, err := s.bot.Send(msg); err != nil {
+			s.logger.Error("Failed to send error message", slog.String("error", err.Error()))
+		}
 		return
 	}
 
@@ -114,7 +116,9 @@ func (s *telegramService) handleLinking(chatID int64, username string, token str
 	}
 
 	msg := tgbotapi.NewMessage(chatID, "✅ Аккаунт успешно привязан! Теперь вы можете делиться планами из приложения.")
-	s.bot.Send(msg)
+	if _, err := s.bot.Send(msg); err != nil {
+		s.logger.Error("Failed to send message", slog.String("error", err.Error()))
+	}
 }
 
 func (s *telegramService) SendDailyPlan(userID string, planText string) error {

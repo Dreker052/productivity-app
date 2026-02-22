@@ -162,7 +162,9 @@ func main() {
 
 	logger.Info("Closing database connection...")
 	db.Close()
-	queueClient.Close()
+	if err := queueClient.Close(); err != nil {
+		logger.Error("Failed to close queue client", slog.String("error", err.Error()))
+	}
 
 	logger.Info("Server exited properly")
 

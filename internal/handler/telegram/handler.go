@@ -84,17 +84,18 @@ func (h *telegramHandler) ShareDailyTasksToTelegram(c *gin.Context) {
 		"Thursday": "Четверг", "Friday": "Пятница", "Saturday": "Суббота", "Sunday": "Воскресенье",
 	}
 	dayOfWeek := daysRu[date.Weekday().String()]
-	sb.WriteString(fmt.Sprintf("📅 <b>План на %s</b> (%s)\n", date.Format("02.01"), dayOfWeek))
+	fmt.Fprintf(&sb, "📅 <b>План на %s</b> (%s)\n", date.Format("02.01"), dayOfWeek)
 
-	sb.WriteString(fmt.Sprintf("🏆 <i>Прогресс: %d/%d (%d%%)</i>\n\n", completedCount, len(tasks), progressPercent))
+	fmt.Fprintf(&sb, "🏆 <i>Прогресс: %d/%d (%d%%)</i>\n\n", completedCount, len(tasks), progressPercent)
 
 	for _, t := range tasks {
 		safeTitle := htmlEscape(t.Title)
 
 		if t.IsCompleted {
-			sb.WriteString(fmt.Sprintf("<s>%s</s>\n", safeTitle))
+			fmt.Fprintf(&sb, "<s>%s</s>\n", safeTitle)
+
 		} else {
-			sb.WriteString(fmt.Sprintf("%s\n", safeTitle))
+			fmt.Fprintf(&sb, "%s\n", safeTitle)
 		}
 	}
 

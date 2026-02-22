@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Dreker052/productivity-app/internal/models"
-	"github.com/Masterminds/squirrel"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -90,8 +89,8 @@ func (r *dailyTaskRepository) GetByDate(ctx context.Context, userID string, date
 func (r *dailyTaskRepository) ToggleStatus(ctx context.Context, userID string, taskID string) error {
 
 	sql, args, err := r.sb.Update("daily_tasks").
-		Set("is_completed", squirrel.Expr("NOT is_completed")).
-		Where(squirrel.Eq{
+		Set("is_completed", sq.Expr("NOT is_completed")).
+		Where(sq.Eq{
 			"id":      taskID,
 			"user_id": userID,
 		}).
